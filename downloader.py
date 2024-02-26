@@ -127,7 +127,9 @@ def generar_catalogo():
 
         # Limpiamos el nombre com;un.
         df["nombrecomun"] = df["nombrecomun"].apply(
-            lambda x: ", ".join(x.split(",")) if x is not None else x
+            lambda x: ", ".join([item.strip() for item in x.split(",")])
+            if x is not None
+            else x
         )
 
         # Guardamos el DataFrame a CSV.
