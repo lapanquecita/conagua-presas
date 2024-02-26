@@ -125,6 +125,11 @@ def generar_catalogo():
         # Quitamos las columnas que no necesitamos.
         df = df.iloc[:, 2:-3]
 
+        # Limpiamos el nombre com;un.
+        df["nombrecomun"] = df["nombrecomun"].apply(
+            lambda x: ", ".join(x.split(",")) if x is not None else x
+        )
+
         # Guardamos el DataFrame a CSV.
         df.to_csv("./catalogo.csv", index=False, encoding="utf-8")
 
