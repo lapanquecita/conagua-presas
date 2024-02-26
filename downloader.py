@@ -43,7 +43,7 @@ def descargar(año):
     fecha_fin = datetime(año + 1, 1, 1)
 
     # Alternativamente podemos limitar la búqueda hasta el día actual.
-    # fecha_fin = datetime.today()
+    fecha_fin = datetime.today()
 
     # Calculamos la diferencia de días entre ambas fechas.
     dias = (fecha_fin - fecha_inicio).days
@@ -60,9 +60,9 @@ def descargar(año):
         # Si el archivo ya existe, nos lo saltamos.
         # De lo contrario, lo descargamos.
         if nombre_archivo not in archivos_guardados:
-            with requests.get(url_nueva, headers=HEADERS) as response:
+            with requests.get(url_nueva, headers=HEADERS) as respuesta:
                 open(f"./archivos/{nombre_archivo}", "w", encoding="utf-8").write(
-                    response.text
+                    respuesta.text
                 )
                 print("Descargado:", nombre_archivo)
 
@@ -106,6 +106,30 @@ def combinar(año):
     final.to_csv(f"./data/{año}.csv", index=False, encoding="utf-8")
 
 
+def generar_catalogo():
+    """
+    GEnera un catálogo con los datos de cada presa.
+    """
+
+    # Definioms la fecha del catálogo.
+    fecha = datetime(2024, 1, 1)
+    fecha_str = f"{fecha.year}-{str(fecha.month).zfill(2)}-{str(fecha.day).zfill(2)}"
+
+    # Preparamos la URL y hacemos la petición.
+    url = URL_BASE.format(fecha_str)
+
+    with requests.get(url, headers=HEADERS) as respuesta:
+        # Convertimos la respuesta a DataFrame.
+        df = pd.DataFrame.from_records(respuesta.json())
+
+        # Quitamos las columnas que no necesitamos.
+        df = df.iloc[:, 2:-3]
+
+        # Guardamos el DataFrame a CSV.
+        df.to_csv("./catalogo.csv", index=False, encoding="utf-8")
+
+
 if __name__ == "__main__":
     descargar(2024)
     combinar(2024)
+    generar_catalogo()
