@@ -436,24 +436,22 @@ def combinar_imagenes():
 
 
 if __name__ == "__main__":
+    # Nuevo León
     # extraer_datos("CCHNL", "CPRNL", "LBCNL", "PSANL")
-
     # plot_candle(
-    #    "las prinicipales presas de Nuevo León", "CCHNL", "CPRNL", "LBCNL", "PSANL"
+    #    "las principales presas de Nuevo León", "CCHNL", "CPRNL", "LBCNL", "PSANL"
     # )
-
     # plot_candle_perc(
-    #    "las prinicipales presas de Nuevo León", "CCHNL", "CPRNL", "LBCNL", "PSANL"
+    #    "las principales presas de Nuevo León", "CCHNL", "CPRNL", "LBCNL", "PSANL"
     # )
+    # combinar_imagenes()
 
-    # extraer_datos("VBRMX", "DBOMC", "VVCMX")
-
+    # Cutzamala
+    extraer_datos("VBRMX", "DBOMC", "VVCMX")
     plot_candle(
-        "las prinicpales presas del Sistema Cutzamala", "VBRMX", "DBOMC", "VVCMX"
+        "las principales presas del Sistema Cutzamala", "VBRMX", "DBOMC", "VVCMX"
     )
-
     plot_candle_perc(
-        "las prinicpales presas del Sistema Cutzamala", "VBRMX", "DBOMC", "VVCMX"
+        "las principales presas del Sistema Cutzamala", "VBRMX", "DBOMC", "VVCMX"
     )
-
     combinar_imagenes()
