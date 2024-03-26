@@ -6,64 +6,79 @@ import plotly.graph_objects as go
 from PIL import Image
 
 
-def extraer_datos(*presas):
+def main(titulo, *presas):
     """
-    Extrae datos de las presas especificadas.
+    Inicia el reporte de la presa especificada.
+
+    Se crean dos gráficas de vela con los datos
+    mensuales de los últimos 15 años.
 
     Parameters
     ----------
+    titulo : str
+        El título que utilizaremos para las gráficas.
+
     presas : str
-        Los identificadores de cada presa.
+        Los identificadores de las presas que queremos graficar.
 
     """
+        
+    # Cargamos y filtramos el catálogo de presas.
+    catalogo = pd.read_csv("./catalogo.csv")
+    catalogo = catalogo[catalogo["clavesih"].isin(presas)]
 
+    # calculamos el NAMO de todas las presas.
+    namo = catalogo["namoalmac"].sum()
+
+    # Obtenemos la lista de nombres comunes de las presas.
+    nombres = "<br>".join("• " + catalogo["nombrecomun"])
+
+    # Vamos a juntar todos los DataFrames en uno solo.
     dfs = list()
+    cols = ["fechamonitoreo", "clavesih", "almacenaactual"]
 
     # Iteramos sobre los archivos anuales.
     for file in os.listdir("./data"):
         print(file)
 
-        # Cargamos el dataset.
-        df = pd.read_csv(f"./data/{file}")
+        # Cargamos el dataset con las columnas especificadas.
+        df = pd.read_csv(f"./data/{file}", parse_dates=["fechamonitoreo"], usecols=cols)
 
-        # Seleccionamos solo las presas de nuestro interés.
+        # Seleccionamos las presas de nuestro interés.
         df = df[df["clavesih"].isin(presas)]
 
         # Agregamos el DataFrame a la lista de DataFrames.
         dfs.append(df)
 
-    # Consolidamos todos los DataFrames y guardamos el resultado.
-    final = pd.concat(dfs, axis=0)
-    final.to_csv("./resultado.csv", index=False, encoding="utf-8")
+    # Consolidamos todos los DataFrames.
+    completo = pd.concat(dfs, axis=0)
+
+    # Llamamos las siguientes funciones para crear las gráficas.
+    plot_candle(completo, nombres, namo, titulo)
+    plot_candle_perc(completo, nombres, namo, titulo)
+    combinar_imagenes()
 
 
-def plot_candle(titulo, *presas):
+def plot_candle(df, nombres, namo, titulo):
     """
     Crea una gráfica de velas con el nivel de almacenamiento
     de las presas especificadas.
 
     Parameters
     ----------
+    df : pandas.DataFrame
+        El DataFrame con los datos de las presas.
+
+    nombres : str
+        Los nombres comunes de las presas.
+
+    namo : float
+        el nivel de almacenamiento máximo ordinario de todas las presas.
+
     titulo : str
         El título de la gráfica.
 
-    presas : str
-        Los identificadores de las presas.
-
     """
-
-    # Cargamos y filtramos el catálogo de presas.
-    catalogo = pd.read_csv("./catalogo.csv")
-    catalogo = catalogo[catalogo["clavesih"].isin(presas)]
-
-    # Calculamos el NAMO total.
-    namo = catalogo["namoalmac"].sum()
-
-    # Obtenemos la lista de nombres comunes de las presas.
-    nombres = "<br>".join("• " + catalogo["nombrecomun"])
-
-    # CArgamos el dataset de las presas especificadas.
-    df = pd.read_csv("./resultado.csv", parse_dates=["fechamonitoreo"])
 
     # Transformamos el DataFrame para que las columnas sean las presas
     # y los valores el nivel actual de llenado.
@@ -195,7 +210,7 @@ def plot_candle(titulo, *presas):
                 yref="paper",
                 xanchor="left",
                 yanchor="top",
-                text="Fuente: CONAGUA (febrero 2024)",
+                text="Fuente: CONAGUA (marzo 2024)",
             ),
             dict(
                 x=0.5,
@@ -221,7 +236,7 @@ def plot_candle(titulo, *presas):
     fig.write_image("./1.png")
 
 
-def plot_candle_perc(titulo, *presas):
+def plot_candle_perc(df, nombres, namo, titulo):
     """
     Crea una gráfica de velas con el nivel de almacenamiento
     de las presas especificadas.
@@ -231,26 +246,19 @@ def plot_candle_perc(titulo, *presas):
 
     Parameters
     ----------
+    df : pandas.DataFrame
+        El DataFrame con los datos de las presas.
+
+    nombres : str
+        Los nombres comunes de las presas.
+
+    namo : float
+        el nivel de almacenamiento máximo ordinario de todas las presas.
+
     titulo : str
         El título de la gráfica.
 
-    presas : str
-        Los identificadores de las presas.
-
     """
-
-    # Cargamos y filtramos el catálogo de presas.
-    catalogo = pd.read_csv("./catalogo.csv")
-    catalogo = catalogo[catalogo["clavesih"].isin(presas)]
-
-    # Calculamos el NAMO total.
-    namo = catalogo["namoalmac"].sum()
-
-    # Obtenemos la lista de nombres comunes de las presas.
-    nombres = "<br>".join("• " + catalogo["nombrecomun"])
-
-    # CArgamos el dataset de las presas especificadas.
-    df = pd.read_csv("./resultado.csv", parse_dates=["fechamonitoreo"])
 
     # Transformamos el DataFrame para que las columnas sean las presas
     # y los valores el nivel actual de llenado.
@@ -386,7 +394,7 @@ def plot_candle_perc(titulo, *presas):
                 yref="paper",
                 xanchor="left",
                 yanchor="top",
-                text="Fuente: CONAGUA (febrero 2024)",
+                text="Fuente: CONAGUA (marzo 2024)",
             ),
             dict(
                 x=0.5,
@@ -437,21 +445,7 @@ def combinar_imagenes():
 
 if __name__ == "__main__":
     # Nuevo León
-    # extraer_datos("CCHNL", "CPRNL", "LBCNL", "PSANL")
-    # plot_candle(
-    #    "las principales presas de Nuevo León", "CCHNL", "CPRNL", "LBCNL", "PSANL"
-    # )
-    # plot_candle_perc(
-    #    "las principales presas de Nuevo León", "CCHNL", "CPRNL", "LBCNL", "PSANL"
-    # )
-    # combinar_imagenes()
+    # main("las principales presas de Nuevo León", "CCHNL", "CPRNL", "LBCNL", "PSANL")
 
     # Cutzamala
-    extraer_datos("VBRMX", "DBOMC", "VVCMX")
-    plot_candle(
-        "las principales presas del Sistema Cutzamala", "VBRMX", "DBOMC", "VVCMX"
-    )
-    plot_candle_perc(
-        "las principales presas del Sistema Cutzamala", "VBRMX", "DBOMC", "VVCMX"
-    )
-    combinar_imagenes()
+    main("las principales presas del Sistema Cutzamala", "VBRMX", "DBOMC", "VVCMX")
