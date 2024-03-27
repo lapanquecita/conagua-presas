@@ -20,7 +20,7 @@ ENTIDADES = {
     "Jal.": "Jalisco",
     "Mich.": "Michoacán",
     "Mor.": "Morelos",
-    "Méx.": "Estado de México",
+    "Méx.": "Edo. de México",
     "N.L.": "Nuevo León",
     "Nay.": "Nayarit",
     "Oax.": "Oaxaca",
@@ -36,7 +36,7 @@ ENTIDADES = {
 }
 
 
-def main(presa_id):
+def main(titulo, *presas):
     """
     Inicia el reporte de la presa especificada.
 
@@ -45,21 +45,29 @@ def main(presa_id):
 
     Parameters
     ----------
-    presa_id : str
-        El identificador de la presa que queremos graficar.
+    titulo : str
+        El título que utilizaremos para las gráficas.
+
+    presas : str
+        Los identificadores de las presas que queremos graficar.
 
     """
 
     # Cargamos y filtramos el catálogo de presas.
     catalogo = pd.read_csv("./catalogo.csv")
-    catalogo = catalogo[catalogo["clavesih"] == presa_id]
+    catalogo = catalogo[catalogo["clavesih"].isin(presas)]
 
-    # Obtenemos el NAMO.
-    namo = catalogo["namoalmac"].iloc[0]
+    # calculamos el NAMO de todas las presas.
+    namo = catalogo["namoalmac"].sum()
 
-    # Obtenemos el nombre común de la presa y lo limpiamos.
-    nombre, estado = catalogo["nombrecomun"].iloc[0].split(",")
-    nombre = ", ".join([nombre, ENTIDADES[estado.strip()]])
+    # Obtenemos la lista de nombres comunes de las presas.
+    nombres = list()
+
+    for nombre in catalogo["nombrecomun"]:
+        nombre, estado = nombre.split(", ")
+        nombres.append(f"• {nombre}, {ENTIDADES[estado.strip()]}")
+
+    nombres = "<br>".join(nombres)
 
     # Vamos a juntar todos los DataFrames en uno solo.
     dfs = list()
@@ -72,8 +80,8 @@ def main(presa_id):
         # Cargamos el dataset con las columnas especificadas.
         df = pd.read_csv(f"./data/{file}", parse_dates=["fechamonitoreo"], usecols=cols)
 
-        # Seleccionamos la presa de nuestro interés.
-        df = df[df["clavesih"] == presa_id]
+        # Seleccionamos las presas de nuestro interés.
+        df = df[df["clavesih"].isin(presas)]
 
         # Agregamos el DataFrame a la lista de DataFrames.
         dfs.append(df)
@@ -82,12 +90,12 @@ def main(presa_id):
     completo = pd.concat(dfs, axis=0)
 
     # Llamamos las siguientes funciones para crear las gráficas.
-    plot_candle(completo, nombre, namo)
-    plot_candle_perc(completo, nombre, namo)
-    combinar_imagenes(presa_id)
+    plot_candle(completo, nombres, namo, titulo)
+    plot_candle_perc(completo, nombres, namo, titulo)
+    combinar_imagenes()
 
 
-def plot_candle(df, nombre, namo):
+def plot_candle(df, nombres, namo, titulo):
     """
     Crea una gráfica de velas con el nivel de almacenamiento
     de las presas especificadas.
@@ -95,13 +103,16 @@ def plot_candle(df, nombre, namo):
     Parameters
     ----------
     df : pandas.DataFrame
-        El DataFrame con los datos de la presa.
+        El DataFrame con los datos de las presas.
 
-    nomre : str
-        El nomre común de la presa.
+    nombres : str
+        Los nombres comunes de las presas.
 
     namo : float
-        el nivel de almacenamiento máximo ordinario.
+        el nivel de almacenamiento máximo ordinario de todas las presas.
+
+    titulo : str
+        El título de la gráfica.
 
     """
 
@@ -184,8 +195,7 @@ def plot_candle(df, nombre, namo):
         gridwidth=0.5,
         showline=True,
         nticks=20,
-        zeroline=True,
-        zerolinewidth=1,
+        zeroline=False,
         mirror=True,
     )
 
@@ -204,7 +214,7 @@ def plot_candle(df, nombre, namo):
         font_family="Lato",
         font_color="#FFFFFF",
         font_size=18,
-        title_text=f"Evolución del almacenamiento de la presa <b>{nombre}</b> (nivel máximo ordinario: <b>{namo:,.1f} hm<sup>3</sup></b>)",
+        title_text=f"Evolución del almacenamiento de {titulo} (nivel máximo ordinario: <b>{namo:,.1f} hm<sup>3</sup></b>)",
         title_x=0.5,
         title_y=0.975,
         margin_t=50,
@@ -215,6 +225,20 @@ def plot_candle(df, nombre, namo):
         plot_bgcolor="#000000",
         paper_bgcolor="#282A3A",
         annotations=[
+            dict(
+                x=1.0,
+                y=0.93,
+                xref="paper",
+                yref="paper",
+                xanchor="right",
+                yanchor="top",
+                borderpad=7,
+                bordercolor="#FFFFFF",
+                borderwidth=1,
+                bgcolor="#000000",
+                align="left",
+                text=f"<b>Nota:</b><br>Cada vela representa las cifras<br>mensuales de las presas:<br>{nombres}",
+            ),
             dict(
                 x=0.01,
                 y=-0.16,
@@ -248,7 +272,7 @@ def plot_candle(df, nombre, namo):
     fig.write_image("./1.png")
 
 
-def plot_candle_perc(df, nombre, namo):
+def plot_candle_perc(df, nombres, namo, titulo):
     """
     Crea una gráfica de velas con el nivel de almacenamiento
     de las presas especificadas.
@@ -259,13 +283,16 @@ def plot_candle_perc(df, nombre, namo):
     Parameters
     ----------
     df : pandas.DataFrame
-        El DataFrame con los datos de la presa.
+        El DataFrame con los datos de las presas.
 
-    nomre : str
-        El nomre común de la presa.
+    nombres : str
+        Los nombres comunes de las presas.
 
     namo : float
-        el nivel de almacenamiento máximo ordinario.
+        el nivel de almacenamiento máximo ordinario de todas las presas.
+
+    titulo : str
+        El título de la gráfica.
 
     """
 
@@ -352,8 +379,7 @@ def plot_candle_perc(df, nombre, namo):
         gridwidth=0.35,
         showline=True,
         nticks=20,
-        zeroline=True,
-        zerolinewidth=1,
+        zeroline=False,
         mirror=True,
     )
 
@@ -372,7 +398,7 @@ def plot_candle_perc(df, nombre, namo):
         font_family="Lato",
         font_color="#FFFFFF",
         font_size=18,
-        title_text=f"Evolución del almacenamiento de la presa <b>{nombre}</b> (nivel máximo ordinario: <b>{namo:,.1f} hm<sup>3</sup></b>)",
+        title_text=f"Evolución del almacenamiento de {titulo} (nivel máximo ordinario: <b>{namo:,.1f} hm<sup>3</sup></b>)",
         title_x=0.5,
         title_y=0.975,
         margin_t=50,
@@ -383,6 +409,20 @@ def plot_candle_perc(df, nombre, namo):
         plot_bgcolor="#000000",
         paper_bgcolor="#282A3A",
         annotations=[
+            dict(
+                x=1.0,
+                y=0.93,
+                xref="paper",
+                yref="paper",
+                xanchor="right",
+                yanchor="top",
+                borderpad=7,
+                bordercolor="#FFFFFF",
+                borderwidth=1,
+                bgcolor="#000000",
+                align="left",
+                text=f"<b>Nota:</b><br>Cada vela representa las cifras<br>mensuales de las presas:<br>{nombres}",
+            ),
             dict(
                 x=0.01,
                 y=-0.16,
@@ -416,16 +456,10 @@ def plot_candle_perc(df, nombre, namo):
     fig.write_image("./2.png")
 
 
-def combinar_imagenes(presa_id):
+def combinar_imagenes():
     """
     Esta función une las dos imágenes generadas por
     las otras funciones.
-
-    Parameters
-    ----------
-    presa_id : str
-        El identificador de la presa. Usado para nombrar el archivo final.
-
     """
 
     # Cargamos las imágenes.
@@ -442,8 +476,12 @@ def combinar_imagenes(presa_id):
     resultado.paste(im=imagen2, box=(0, imagen1.height * 1))
 
     # Gaurdamos la imagen final.
-    resultado.save(f"./f{presa_id}.png")
+    resultado.save("./final.png")
 
 
 if __name__ == "__main__":
-    main("ARCSO")
+    # Nuevo León
+    # main("las principales presas de Nuevo León", "CCHNL", "CPRNL", "LBCNL", "PSANL")
+
+    # Cutzamala
+    main("las principales presas del Sistema Cutzamala", "VBRMX", "DBOMC", "VVCMX")
