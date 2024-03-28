@@ -440,7 +440,7 @@ def combinar_imagenes(presa_id):
     resultado.paste(im=imagen2, box=(0, imagen1.height * 1))
 
     # Gaurdamos la imagen final.
-    resultado.save(f"./f{presa_id}.png")
+    resultado.save(f"./{presa_id}.png")
 
 
 if __name__ == "__main__":
