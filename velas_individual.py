@@ -67,8 +67,6 @@ def main(presa_id):
 
     # Iteramos sobre los archivos anuales.
     for file in os.listdir("./data"):
-        print(file)
-
         # Cargamos el dataset con las columnas especificadas.
         df = pd.read_csv(f"./data/{file}", parse_dates=["fechamonitoreo"], usecols=cols)
 
@@ -204,7 +202,7 @@ def plot_candle(df, nombre, namo):
         font_family="Lato",
         font_color="#FFFFFF",
         font_size=18,
-        title_text=f"Evolución del almacenamiento de la presa <b>{nombre}</b> (nivel máximo ordinario: <b>{namo:,.1f} hm<sup>3</sup></b>)",
+        title_text=f"Evolución del nivel de almacenamiento de la presa <b>{nombre}</b> (nivel máximo ordinario: <b>{namo:,.1f} hm<sup>3</sup></b>)",
         title_x=0.5,
         title_y=0.975,
         margin_t=50,
@@ -372,7 +370,7 @@ def plot_candle_perc(df, nombre, namo):
         font_family="Lato",
         font_color="#FFFFFF",
         font_size=18,
-        title_text=f"Evolución del almacenamiento de la presa <b>{nombre}</b> (nivel máximo ordinario: <b>{namo:,.1f} hm<sup>3</sup></b>)",
+        title_text=f"Evolución del nivel de almacenamiento de la presa <b>{nombre}</b> (nivel máximo ordinario: <b>{namo:,.1f} hm<sup>3</sup></b>)",
         title_x=0.5,
         title_y=0.975,
         margin_t=50,
