@@ -18,7 +18,7 @@ https://sinav30.conagua.gob.mx:8080/Presas/
 
 * `velas_individual.py`: Este script crea gráficas de velas para una presa especificada.
 
-* `velas_multiple.py`: Este script crea gráficas de velas para un conjunto de presas especificadas.
+* `velas_multiples.py`: Este script crea gráficas de velas para un conjunto de presas especificadas.
 
 ## Gráficas de velas
    
