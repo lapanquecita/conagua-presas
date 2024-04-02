@@ -331,7 +331,7 @@ def plot_candle_perc(df, nombre, namo):
         linewidth=1,
         showline=True,
         showgrid=True,
-        gridwidth=0.35,
+        gridwidth=0.5,
         mirror=True,
         nticks=25,
     )
@@ -347,7 +347,7 @@ def plot_candle_perc(df, nombre, namo):
         title_standoff=6,
         tickcolor="#FFFFFF",
         linewidth=1,
-        gridwidth=0.35,
+        gridwidth=0.5,
         showline=True,
         nticks=20,
         zeroline=True,
