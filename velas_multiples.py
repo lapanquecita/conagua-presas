@@ -36,7 +36,7 @@ ENTIDADES = {
 }
 
 
-def main(titulo, *presas):
+def main(titulo, lado, *presas):
     """
     Inicia el reporte de la presa especificada.
 
@@ -47,6 +47,9 @@ def main(titulo, *presas):
     ----------
     titulo : str
         El título que utilizaremos para las gráficas.
+
+    lado : str (left|right)
+        El lado donde se posicionará la anotación.
 
     presas : str
         Los identificadores de las presas que queremos graficar.
@@ -88,12 +91,65 @@ def main(titulo, *presas):
     completo = pd.concat(dfs, axis=0)
 
     # Llamamos las siguientes funciones para crear las gráficas.
-    plot_candle(completo, nombres, namo, titulo)
-    plot_candle_perc(completo, nombres, namo, titulo)
+    plot_candle(completo, nombres, namo, titulo, lado)
+    plot_candle_perc(completo, nombres, namo, titulo, lado)
     combinar_imagenes()
 
 
-def plot_candle(df, nombres, namo, titulo):
+def main_estatal(titulo, entidad, lado):
+    """
+    Inicia el reporte de la presa especificada.
+
+    Se crean dos gráficas de vela con los datos
+    mensuales de los últimos 15 años.
+
+    Parameters
+    ----------
+    titulo : str
+        El título que utilizaremos para las gráficas.
+
+    entidad : str
+        El nombre de la entidad federativa que queremos graficar.
+
+    lado : str (left|right)
+        El lado donde se posicionará la anotación.
+
+    """
+
+    # Cargamos y filtramos el catálogo de presas.
+    catalogo = pd.read_csv("./catalogo.csv")
+    catalogo = catalogo[catalogo["estado"] == entidad]
+
+    claves = catalogo["clavesih"].unique()
+
+    # calculamos el NAMO de todas las presas.
+    namo = catalogo["namoalmac"].sum()
+
+    # Vamos a juntar todos los DataFrames en uno solo.
+    dfs = list()
+    cols = ["fechamonitoreo", "clavesih", "almacenaactual"]
+
+    # Iteramos sobre los archivos anuales.
+    for file in os.listdir("./data"):
+        # Cargamos el dataset con las columnas especificadas.
+        df = pd.read_csv(f"./data/{file}", parse_dates=["fechamonitoreo"], usecols=cols)
+
+        # Seleccionamos las presas de nuestro interés.
+        df = df[df["clavesih"].isin(claves)]
+
+        # Agregamos el DataFrame a la lista de DataFrames.
+        dfs.append(df)
+
+    # Consolidamos todos los DataFrames.
+    completo = pd.concat(dfs, axis=0)
+
+    # Llamamos las siguientes funciones para crear las gráficas.
+    plot_candle(completo, None, namo, titulo, lado)
+    plot_candle_perc(completo, None, namo, titulo, lado)
+    combinar_imagenes()
+
+
+def plot_candle(df, nombres, namo, titulo, lado):
     """
     Crea una gráfica de velas con el nivel de almacenamiento
     de las presas especificadas.
@@ -112,6 +168,9 @@ def plot_candle(df, nombres, namo, titulo):
     titulo : str
         El título de la gráfica.
 
+    lado : str (left|right)
+        El lado donde se posicionará la anotación.
+
     """
 
     # Transformamos el DataFrame para que las columnas sean las presas
@@ -125,6 +184,9 @@ def plot_candle(df, nombres, namo, titulo):
 
     # Calculamos el total de llenado de todas las presas.
     df["total"] = df.sum(axis=1)
+
+    # Quitamos valores atípicos (triple del NAMO, lo cual es imposible).
+    df = df[df["total"] < namo * 3]
 
     data = list()
 
@@ -149,6 +211,19 @@ def plot_candle(df, nombres, namo, titulo):
                 pass
 
     final = pd.DataFrame.from_records(data, index="fecha")
+
+    # Ajustamos el texto de la anotación.
+    if nombres is None:
+        nota = "<b>Nota:</b><br>Cada vela representa las cifras mensuales<br>de las principales presas del estado."
+    else:
+        nota = f"<b>Nota:</b><br>Cada vela representa las cifras<br>mensuales de las presas:<br>{nombres}"
+
+    if lado == "left":
+        xanchor = "left"
+        x_pos = 0.02
+    else:
+        xanchor = "right"
+        x_pos = 1.0
 
     fig = go.Figure()
 
@@ -193,7 +268,8 @@ def plot_candle(df, nombres, namo, titulo):
         gridwidth=0.5,
         showline=True,
         nticks=20,
-        zeroline=False,
+        zeroline=True,
+        zerolinewidth=1,
         mirror=True,
     )
 
@@ -224,18 +300,18 @@ def plot_candle(df, nombres, namo, titulo):
         paper_bgcolor="#282A3A",
         annotations=[
             dict(
-                x=1.0,
+                x=x_pos,
                 y=0.93,
                 xref="paper",
                 yref="paper",
-                xanchor="right",
+                xanchor=xanchor,
                 yanchor="top",
                 borderpad=7,
                 bordercolor="#FFFFFF",
                 borderwidth=1,
                 bgcolor="#000000",
                 align="left",
-                text=f"<b>Nota:</b><br>Cada vela representa las cifras<br>mensuales de las presas:<br>{nombres}",
+                text=nota,
             ),
             dict(
                 x=0.01,
@@ -270,7 +346,7 @@ def plot_candle(df, nombres, namo, titulo):
     fig.write_image("./1.png")
 
 
-def plot_candle_perc(df, nombres, namo, titulo):
+def plot_candle_perc(df, nombres, namo, titulo, lado):
     """
     Crea una gráfica de velas con el nivel de almacenamiento
     de las presas especificadas.
@@ -292,6 +368,9 @@ def plot_candle_perc(df, nombres, namo, titulo):
     titulo : str
         El título de la gráfica.
 
+    lado : str (left|right)
+        El lado donde se posicionará la anotación.
+
     """
 
     # Transformamos el DataFrame para que las columnas sean las presas
@@ -305,6 +384,9 @@ def plot_candle_perc(df, nombres, namo, titulo):
 
     # Calculamos el total de llenado de todas las presas.
     df["total"] = df.sum(axis=1)
+
+    # Quitamos valores atípicos (triple del NAMO, lo cual es imposible).
+    df = df[df["total"] < namo * 3]
 
     data = list()
 
@@ -332,6 +414,19 @@ def plot_candle_perc(df, nombres, namo, titulo):
 
     # Convertimos todas las cifras a porcentajes.
     final = final / namo * 100
+
+    # Ajustamos el texto de la anotación.
+    if nombres is None:
+        nota = "<b>Nota:</b><br>Cada vela representa las cifras mensuales<br>de las principales presas del estado."
+    else:
+        nota = f"<b>Nota:</b><br>Cada vela representa las cifras<br>mensuales de las presas:<br>{nombres}"
+
+    if lado == "left":
+        xanchor = "left"
+        x_pos = 0.02
+    else:
+        xanchor = "right"
+        x_pos = 1.0
 
     fig = go.Figure()
 
@@ -377,7 +472,8 @@ def plot_candle_perc(df, nombres, namo, titulo):
         gridwidth=0.5,
         showline=True,
         nticks=20,
-        zeroline=False,
+        zeroline=True,
+        zerolinewidth=1,
         mirror=True,
     )
 
@@ -408,18 +504,18 @@ def plot_candle_perc(df, nombres, namo, titulo):
         paper_bgcolor="#282A3A",
         annotations=[
             dict(
-                x=1.0,
+                x=x_pos,
                 y=0.93,
                 xref="paper",
                 yref="paper",
-                xanchor="right",
+                xanchor=xanchor,
                 yanchor="top",
                 borderpad=7,
                 bordercolor="#FFFFFF",
                 borderwidth=1,
                 bgcolor="#000000",
                 align="left",
-                text=f"<b>Nota:</b><br>Cada vela representa las cifras<br>mensuales de las presas:<br>{nombres}",
+                text=nota,
             ),
             dict(
                 x=0.01,
@@ -478,8 +574,15 @@ def combinar_imagenes():
 
 
 if __name__ == "__main__":
-    # Nuevo León
+    # Seleccionado
     # main("las principales presas de Nuevo León", "CCHNL", "CPRNL", "LBCNL", "PSANL")
+    main(
+        "las principales presas del Sistema Cutzamala",
+        "right",
+        "VBRMX",
+        "DBOMC",
+        "VVCMX",
+    )
 
-    # Cutzamala
-    main("las principales presas del Sistema Cutzamala", "VBRMX", "DBOMC", "VVCMX")
+    # Estatal
+    # main_estatal("las principales presas de Querétaro", "Querétaro", "left")
