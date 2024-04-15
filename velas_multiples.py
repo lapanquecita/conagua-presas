@@ -35,6 +35,9 @@ ENTIDADES = {
     "Zac.": "Zacatecas",
 }
 
+# La fecha que se mostrará en la fuente.
+FECHA_FUENTE = "abril 2024"
+
 
 def main(titulo, lado, *presas):
     """
@@ -320,7 +323,7 @@ def plot_candle(df, nombres, namo, titulo, lado):
                 yref="paper",
                 xanchor="left",
                 yanchor="top",
-                text="Fuente: CONAGUA (marzo 2024)",
+                text=f"Fuente: CONAGUA ({FECHA_FUENTE})",
             ),
             dict(
                 x=0.5,
@@ -524,7 +527,7 @@ def plot_candle_perc(df, nombres, namo, titulo, lado):
                 yref="paper",
                 xanchor="left",
                 yanchor="top",
-                text="Fuente: CONAGUA (marzo 2024)",
+                text=f"Fuente: CONAGUA ({FECHA_FUENTE})",
             ),
             dict(
                 x=0.5,

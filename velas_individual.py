@@ -35,6 +35,9 @@ ENTIDADES = {
     "Zac.": "Zacatecas",
 }
 
+# La fecha que se mostrará en la fuente.
+FECHA_FUENTE = "abril 2024"
+
 
 def main(presa_id):
     """
@@ -114,6 +117,9 @@ def plot_candle(df, nombre, namo):
 
     # Calculamos el total de llenado de todas las presas.
     df["total"] = df.sum(axis=1)
+
+    # Quitamos valores atípicos (triple del NAMO, lo cual es imposible).
+    df = df[df["total"] < namo * 3]
 
     data = list()
 
@@ -220,7 +226,7 @@ def plot_candle(df, nombre, namo):
                 yref="paper",
                 xanchor="left",
                 yanchor="top",
-                text="Fuente: CONAGUA (marzo 2024)",
+                text=f"Fuente: CONAGUA ({FECHA_FUENTE})",
             ),
             dict(
                 x=0.5,
@@ -278,6 +284,9 @@ def plot_candle_perc(df, nombre, namo):
 
     # Calculamos el total de llenado de todas las presas.
     df["total"] = df.sum(axis=1)
+
+    # Quitamos valores atípicos (triple del NAMO, lo cual es imposible).
+    df = df[df["total"] < namo * 3]
 
     data = list()
 
@@ -388,7 +397,7 @@ def plot_candle_perc(df, nombre, namo):
                 yref="paper",
                 xanchor="left",
                 yanchor="top",
-                text="Fuente: CONAGUA (marzo 2024)",
+                text=f"Fuente: CONAGUA ({FECHA_FUENTE})",
             ),
             dict(
                 x=0.5,
@@ -445,3 +454,4 @@ def combinar_imagenes(presa_id):
 
 if __name__ == "__main__":
     main("ARCSO")
+    # main("VBRMX")
