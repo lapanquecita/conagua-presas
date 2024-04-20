@@ -187,7 +187,7 @@ def plot_candle(df, nombres, namo, titulo, lado):
     # Calculamos el total de llenado de todas las presas.
     df["total"] = df.sum(axis=1)
 
-    # Quitamos los picos en la aserie de tiempo.
+    # Quitamos los picos en la serie de tiempo.
     df = df.rolling(7).median()
 
     # Transformamos los datos en valores OHLC mensuales.
@@ -369,7 +369,7 @@ def plot_candle_perc(df, nombres, namo, titulo, lado):
     # Calculamos el porcentaje de llenado de todas las presas.
     df["total"] = df.sum(axis=1) / namo_diario * 100
 
-    # Quitamos los picos en la aserie de tiempo.
+    # Quitamos los picos en la serie de tiempo.
     df = df.rolling(7).median()
 
     # Transformamos los datos en valores OHLC mensuales.
