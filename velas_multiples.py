@@ -1,5 +1,4 @@
 import os
-from datetime import datetime
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -77,10 +76,10 @@ def main(titulo, lado, *presas):
 
     # Vamos a juntar todos los DataFrames en uno solo.
     dfs = list()
-    cols = ["fechamonitoreo", "clavesih", "almacenaactual"]
+    cols = ["fechamonitoreo", "clavesih", "almacenaactual", "namoalmac"]
 
     # Iteramos sobre los archivos anuales.
-    for file in os.listdir("./data"):
+    for file in os.listdir("./data")[-15:]:
         # Cargamos el dataset con las columnas especificadas.
         df = pd.read_csv(f"./data/{file}", parse_dates=["fechamonitoreo"], usecols=cols)
 
@@ -130,10 +129,10 @@ def main_estatal(titulo, entidad, lado):
 
     # Vamos a juntar todos los DataFrames en uno solo.
     dfs = list()
-    cols = ["fechamonitoreo", "clavesih", "almacenaactual"]
+    cols = ["fechamonitoreo", "clavesih", "almacenaactual", "namoalmac"]
 
     # Iteramos sobre los archivos anuales.
-    for file in os.listdir("./data"):
+    for file in os.listdir("./data")[-15:]:
         # Cargamos el dataset con las columnas especificadas.
         df = pd.read_csv(f"./data/{file}", parse_dates=["fechamonitoreo"], usecols=cols)
 
@@ -188,32 +187,11 @@ def plot_candle(df, nombres, namo, titulo, lado):
     # Calculamos el total de llenado de todas las presas.
     df["total"] = df.sum(axis=1)
 
-    # Quitamos valores atípicos (triple del NAMO, lo cual es imposible).
-    df = df[df["total"] < namo * 3]
+    # Quitamos los picos en la aserie de tiempo.
+    df = df.rolling(7).median()
 
-    data = list()
-
-    # Iteramos sobre los años que nos interesa.
-    for year in range(2010, 2025):
-        for month in range(1, 13):
-            try:
-                # Creamos un DataFrame temporal con el mes y año de la iteración actual.
-                temp_df = df[(df.index.year == year) & (df.index.month == month)]
-
-                # Calculamos los 4 valores necesarios.
-                data.append(
-                    {
-                        "fecha": datetime(year, month, 1),
-                        "open": temp_df["total"].iloc[0],
-                        "close": temp_df["total"].iloc[-1],
-                        "high": temp_df["total"].max(),
-                        "low": temp_df["total"].min(),
-                    }
-                )
-            except Exception as _:
-                pass
-
-    final = pd.DataFrame.from_records(data, index="fecha")
+    # Transformamos los datos en valores OHLC mensuales.
+    df = df["total"].resample("MS").ohlc()
 
     # Ajustamos el texto de la anotación.
     if nombres is None:
@@ -232,11 +210,11 @@ def plot_candle(df, nombres, namo, titulo, lado):
 
     fig.add_trace(
         go.Candlestick(
-            x=final.index,
-            open=final["open"],
-            high=final["high"],
-            low=final["low"],
-            close=final["close"],
+            x=df.index,
+            open=df["open"],
+            high=df["high"],
+            low=df["low"],
+            close=df["close"],
             increasing_line_color="#84ffff",
             decreasing_line_color="#ff9800",
         )
@@ -291,7 +269,7 @@ def plot_candle(df, nombres, namo, titulo, lado):
         font_family="Lato",
         font_color="#FFFFFF",
         font_size=18,
-        title_text=f"Evolución del nivel de almacenamiento de {titulo} (nivel máximo ordinario: <b>{namo:,.1f} hm<sup>3</sup></b>)",
+        title_text=f"Evolución del nivel de almacenamiento de {titulo} (NAMO: <b>{namo:,.1f} hm<sup>3</sup></b>)",
         title_x=0.5,
         title_y=0.975,
         margin_t=50,
@@ -376,6 +354,9 @@ def plot_candle_perc(df, nombres, namo, titulo, lado):
 
     """
 
+    # Extraemos el NAMO diario, que será usado para calcular el porcentaje de llenado.
+    namo_diario = df.groupby(df["fechamonitoreo"]).sum(numeric_only=True)["namoalmac"]
+
     # Transformamos el DataFrame para que las columnas sean las presas
     # y los valores el nivel actual de llenado.
     df = df.pivot_table(
@@ -385,38 +366,14 @@ def plot_candle_perc(df, nombres, namo, titulo, lado):
         aggfunc="last",
     )
 
-    # Calculamos el total de llenado de todas las presas.
-    df["total"] = df.sum(axis=1)
+    # Calculamos el porcentaje de llenado de todas las presas.
+    df["total"] = df.sum(axis=1) / namo_diario * 100
 
-    # Quitamos valores atípicos (triple del NAMO, lo cual es imposible).
-    df = df[df["total"] < namo * 3]
+    # Quitamos los picos en la aserie de tiempo.
+    df = df.rolling(7).median()
 
-    data = list()
-
-    # Iteramos sobre los años que nos interesa.
-    for year in range(2010, 2025):
-        for month in range(1, 13):
-            try:
-                # Creamos un DataFrame temporal con el mes y año de la iteración actual.
-                temp_df = df[(df.index.year == year) & (df.index.month == month)]
-
-                # Calculamos los 4 valores necesarios.
-                data.append(
-                    {
-                        "fecha": datetime(year, month, 1),
-                        "open": temp_df["total"].iloc[0],
-                        "close": temp_df["total"].iloc[-1],
-                        "high": temp_df["total"].max(),
-                        "low": temp_df["total"].min(),
-                    }
-                )
-            except Exception as _:
-                pass
-
-    final = pd.DataFrame.from_records(data, index="fecha")
-
-    # Convertimos todas las cifras a porcentajes.
-    final = final / namo * 100
+    # Transformamos los datos en valores OHLC mensuales.
+    df = df["total"].resample("MS").ohlc()
 
     # Ajustamos el texto de la anotación.
     if nombres is None:
@@ -435,11 +392,11 @@ def plot_candle_perc(df, nombres, namo, titulo, lado):
 
     fig.add_trace(
         go.Candlestick(
-            x=final.index,
-            open=final["open"],
-            high=final["high"],
-            low=final["low"],
-            close=final["close"],
+            x=df.index,
+            open=df["open"],
+            high=df["high"],
+            low=df["low"],
+            close=df["close"],
             increasing_line_color="#84ffff",
             decreasing_line_color="#ff9800",
         )
@@ -495,7 +452,7 @@ def plot_candle_perc(df, nombres, namo, titulo, lado):
         font_family="Lato",
         font_color="#FFFFFF",
         font_size=18,
-        title_text=f"Evolución del nivel de almacenamiento de {titulo} (nivel máximo ordinario: <b>{namo:,.1f} hm<sup>3</sup></b>)",
+        title_text=f"Evolución del nivel de almacenamiento de {titulo} (NAMO: <b>{namo:,.1f} hm<sup>3</sup></b>)",
         title_x=0.5,
         title_y=0.975,
         margin_t=50,
