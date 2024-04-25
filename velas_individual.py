@@ -336,7 +336,7 @@ def plot_candle_perc(df, nombre, namo):
         font_family="Lato",
         font_color="#FFFFFF",
         font_size=18,
-        title_text=f"Evolución del nivel de almacenamiento de la presa <b>{nombre}</b> (nivel máximo ordinario: <b>{namo:,.1f} hm<sup>3</sup></b>)",
+        title_text=f"Evolución del nivel de almacenamiento de la presa <b>{nombre}</b> (NAMO: <b>{namo:,.1f} hm<sup>3</sup></b>)",
         title_x=0.5,
         title_y=0.975,
         margin_t=50,
