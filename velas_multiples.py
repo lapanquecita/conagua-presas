@@ -269,7 +269,7 @@ def plot_candle(df, nombres, namo, titulo, lado):
         font_family="Lato",
         font_color="#FFFFFF",
         font_size=18,
-        title_text=f"Evolución del nivel de almacenamiento de {titulo} (NAMO: <b>{namo:,.1f} hm<sup>3</sup></b>)",
+        title_text=f"Evolución del volumen de almacenamiento de {titulo} (NAMO: <b>{namo:,.1f} hm<sup>3</sup></b>)",
         title_x=0.5,
         title_y=0.975,
         margin_t=50,
@@ -452,7 +452,7 @@ def plot_candle_perc(df, nombres, namo, titulo, lado):
         font_family="Lato",
         font_color="#FFFFFF",
         font_size=18,
-        title_text=f"Evolución del nivel de almacenamiento de {titulo} (NAMO: <b>{namo:,.1f} hm<sup>3</sup></b>)",
+        title_text=f"Evolución del volumen de almacenamiento de {titulo} (NAMO: <b>{namo:,.1f} hm<sup>3</sup></b>)",
         title_x=0.5,
         title_y=0.975,
         margin_t=50,
@@ -535,7 +535,14 @@ def combinar_imagenes():
 
 if __name__ == "__main__":
     # Seleccionado
-    # main("las principales presas de Nuevo León", "CCHNL", "CPRNL", "LBCNL", "PSANL")
+    # main(
+    #    "las principales presas de Nuevo León",
+    #    "right",
+    #    "CCHNL",
+    #    "CPRNL",
+    #    "LBCNL",
+    #    "PSANL",
+    # )
     main(
         "las principales presas del Sistema Cutzamala",
         "right",
