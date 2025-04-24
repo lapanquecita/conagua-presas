@@ -102,6 +102,9 @@ def combinar(año):
         if final[col].dtype == "object":
             final[col] = final[col].str.strip()
 
+    # Ordenamos por ID.
+    final.sort_values("idmonitoreodiario", inplace=True)
+
     # Guardamos el DataFrame consolidado.
     final.to_csv(f"./data/{año}.csv", index=False, encoding="utf-8")
 
@@ -137,6 +140,6 @@ def generar_catalogo():
 
 
 if __name__ == "__main__":
-    descargar(2024)
-    combinar(2024)
+    descargar(2025)
+    combinar(2025)
     generar_catalogo()
